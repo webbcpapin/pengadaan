@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Style'); ?>
+</head>
+<body>
+  <div class="wrap sidebar">
+    <h2>Aplikasi Pengadaan</h2>
+    <p class="muted">Panel ringkas untuk administrasi PPK dan PBJ.</p>
+    <button onclick="google.script.run.showAddPackageForm()">Tambah Paket Baru</button>
+    <button onclick="google.script.run.updateDashboard()">Generate Dashboard</button>
+    <button onclick="google.script.run.updateAllChecklistStatus()">Update Checklist</button>
+    <button onclick="google.script.run.showMissingDocuments()">Cek Dokumen Belum Lengkap</button>
+    <hr>
+    <p class="muted small">Pastikan ROOT_FOLDER_ID di Config.gs sudah diisi sebelum menambah paket.</p>
+  </div>
+</body>
+</html>

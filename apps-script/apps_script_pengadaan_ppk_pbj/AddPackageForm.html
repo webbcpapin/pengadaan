@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Style'); ?>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Tambah Paket Pengadaan</h2>
+    <p class="muted">Isi data utama paket. Sistem akan membuat kode paket, folder Drive, checklist dokumen, dan log aktivitas.</p>
+
+    <form id="packageForm">
+      <div class="grid">
+        <label>Tahun Anggaran
+          <input name="tahunAnggaran" type="number" required>
+        </label>
+        <label>Akun Belanja
+          <input name="akunBelanja" type="text" placeholder="521811" required>
+        </label>
+        <label class="full">Nama Paket
+          <input name="namaPaket" type="text" required>
+        </label>
+        <label>Unit/Seksi Pemohon
+          <select name="unitSeksi" data-master="unitSeksi" required></select>
+        </label>
+        <label>Jenis Belanja
+          <select name="jenisBelanja" data-master="jenisBelanja" required></select>
+        </label>
+        <label>Metode Pengadaan
+          <select name="metodePengadaan" data-master="metodePengadaan" required></select>
+        </label>
+        <label>Jenis Kontrak
+          <select name="jenisKontrak" data-master="jenisKontrak" required></select>
+        </label>
+        <label>Pagu Anggaran
+          <input name="paguAnggaran" type="number" min="0" required>
+        </label>
+        <label>Nilai HPS
+          <input name="nilaiHps" type="number" min="0">
+        </label>
+        <label>Nilai Kontrak/SPK
+          <input name="nilaiKontrak" type="number" min="0">
+        </label>
+        <label>Nama Penyedia
+          <input name="namaPenyedia" type="text">
+        </label>
+        <label>NPWP Penyedia
+          <input name="npwpPenyedia" type="text">
+        </label>
+        <label>Tanggal Mulai
+          <input name="tanggalMulai" type="date" required>
+        </label>
+        <label>Tanggal Selesai
+          <input name="tanggalSelesai" type="date" required>
+        </label>
+        <label>PIC
+          <input name="pic" type="text" required>
+        </label>
+        <label>Status Pengadaan
+          <select name="statusPengadaan" data-master="statusPengadaan"></select>
+        </label>
+        <label>Status Dokumen
+          <select name="statusDokumen" data-master="statusDokumen"></select>
+        </label>
+        <label>Status Pembayaran
+          <select name="statusPembayaran" data-master="statusPembayaran"></select>
+        </label>
+        <label class="full">Catatan
+          <textarea name="catatan" rows="3"></textarea>
+        </label>
+      </div>
+
+      <div id="message" class="message" hidden></div>
+      <div class="actions">
+        <button type="button" class="secondary" onclick="google.script.host.close()">Batal</button>
+        <button type="submit" id="submitBtn">Simpan Paket</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('packageForm');
+    const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function setMessage(text, type) {
+      message.hidden = false;
+      message.className = 'message ' + (type || '');
+      message.innerHTML = text;
+    }
+
+    function fillSelect(select, values, defaultValue) {
+      select.innerHTML = '<option value="">Pilih...</option>';
+      (values || []).forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        if (v === defaultValue) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    google.script.run.withSuccessHandler(data => {
+      document.querySelector('[name="tahunAnggaran"]').value = data.defaultYear || new Date().getFullYear();
+      document.querySelectorAll('select[data-master]').forEach(select => {
+        const key = select.getAttribute('data-master');
+        const defaults = {
+          statusPengadaan: 'Draft',
+          statusDokumen: 'Belum Ada',
+          statusPembayaran: 'Belum Diajukan'
+        };
+        fillSelect(select, data[key], defaults[key]);
+      });
+    }).withFailureHandler(err => setMessage(err.message, 'error')).getMasterData();
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Menyimpan...';
+      const data = Object.fromEntries(new FormData(form).entries());
+      google.script.run.withSuccessHandler(res => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Simpan Paket';
+        if (!res.success) {
+          setMessage('<b>Gagal:</b><br>' + (res.errors || []).join('<br>'), 'error');
+          return;
+        }
+        setMessage('<b>Berhasil.</b><br>ID Paket: ' + res.packageId + '<br>Kode Paket: ' + res.packageCode + '<br><a href="' + res.folderUrl + '" target="_blank">Buka Folder Drive</a>', 'success');
+        form.reset();
+      }).withFailureHandler(err => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Simpan Paket';
+        setMessage(err.message, 'error');
+      }).addPackage(data);
+    });
+  </script>
+</body>
+</html>
