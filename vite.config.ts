@@ -2,6 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  base: "/pengadaan/",
+  base: process.env.VERCEL ? "/" : "/pengadaan/",
   plugins: [react()],
 });
